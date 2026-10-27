@@ -1,69 +1,104 @@
 # CareerTrack
 
-CareerTrack is a Flask + MySQL placement management API with a React, TypeScript, and Vite frontend. It supports student, recruiter, and placement-admin workflows.
+## Student Placement and Internship Management System
 
-## Windows setup
+CareerTrack is a college DBMS project for managing student placement activities. Students can maintain basic profile details, review openings, apply, and follow application updates. Recruiters can post openings and review applications. Placement staff can view summary metrics and export a CSV report.
 
-Requirements: Python 3.11+, Node.js, npm, and MySQL 8.
+The application uses a Flask API, a React and TypeScript frontend, and a MySQL database.
 
-1. If `careertrack_db` already exists, keep it and skip database initialization. For a new installation only, review `database/01_init_db_and_user.sql`, then run it from the repository root in PowerShell:
+## Features
 
-   ```powershell
-   mysql -u root -p < database/01_init_db_and_user.sql
-   mysql -u careertrack_user -p careertrack_db < database/02_schema.sql
-   mysql -u careertrack_user -p careertrack_db < database/03_seed_data.sql
-   ```
+| Role | Main actions |
+| --- | --- |
+| Student | Register or sign in, view the dashboard, update phone and resume URL, browse openings, check academic eligibility, apply, track status, and view interviews. |
+| Recruiter | Post openings, review applicants for the recruiter's company, change application status, and schedule interviews. |
+| Placement admin | View placement metrics, student and company information, database status, and download the CSV report. |
 
-   **Caution:** `02_schema.sql` drops and recreates the project tables. Back up first; never run it against an existing database whose data you need to preserve. `03_seed_data.sql` contains sample accounts and records.
+Eligibility checks use the opening status and deadline, CGPA, graduation year, department restrictions, and whether the student has already applied. Listed skills are shown with the opening; the current eligibility service reports skill matches but does not use them to block applications.
 
-2. Create `backend/.env` (it is ignored by Git) with your local MySQL settings. Do not commit it:
+The MySQL schema contains 13 tables for users, students, recruiters, companies, departments, skills, opportunities, applications, application history, and interviews.
 
-   ```dotenv
-   SECRET_KEY=<long-random-session-key>
-   DB_USER=careertrack_user
-   DB_PASSWORD=<your-mysql-user-password>
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_NAME=careertrack_db
-   ```
+## Technology
 
-3. Start the backend in one PowerShell window:
+- Frontend: React, TypeScript, Vite
+- Backend: Python, Flask, Flask-SQLAlchemy
+- Database: MySQL 8
+- Backend tests: pytest with an in-memory SQLite database
 
-   ```powershell
-   cd backend
-   py -3.11 -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   python run.py
-   ```
+## Run locally on Windows
 
-4. Start the frontend in a second PowerShell window:
+You will need Python 3.11 or later, Node.js with npm, and MySQL 8.
 
-   ```powershell
-   cd frontend
-   npm ci
-   npm run dev
-   ```
+### 1. Set up the database
 
-   Open <http://localhost:5173>. Vite proxies `/api` requests to `http://127.0.0.1:5000`.
+If `careertrack_db` already exists and contains data you need, **skip the SQL initialization scripts**.
 
-## Main features
+For a new local database, open the scripts in MySQL Workbench and run them in order:
 
-- Student dashboard, profile contact/resume updates, eligibility-aware opportunities, applications, and interviews.
-- Recruiter opportunity posting, applicant pipeline, status changes, and interview scheduling.
-- Placement-admin metrics, student/company views, MySQL health, and CSV report export.
-- Email/password login, student registration, and role selectors for the seeded demo accounts. Role selection does not authenticate by itself; enter the seeded account password from the seed-data instructions. Seeded demo sessions return to guest mode on reload so they are never silently reused.
-- The seeded student account is presented in the UI as **Jahnavi Chittiboyana**. Existing database rows are not changed by code updates; the updated display name applies when seeding a new database, and the frontend aliases the existing seeded account for display.
+1. `database/01_init_db_and_user.sql`
+2. `database/02_schema.sql`
+3. `database/03_seed_data.sql`
 
-## Checks
+Before running the first script, set a local database-user password in it. Use the same password in `backend/.env`. The schema script drops and recreates the project tables, so do not run it against a database you need to keep.
+
+### 2. Configure and start Flask
+
+Open PowerShell at the project folder:
+
+```powershell
+cd backend
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+notepad .env
+```
+
+If `backend/.env` already exists, keep it and edit it instead of copying over it. Set `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, and `DB_NAME` to match your MySQL setup. Set `SECRET_KEY` to a random local value. Keep `.env` private; Git ignores it.
+
+Start the API in this PowerShell window:
+
+```powershell
+python run.py
+```
+
+The API runs on `http://127.0.0.1:5000` by default.
+
+### 3. Configure and start React
+
+Open a second PowerShell window at the project folder:
 
 ```powershell
 cd frontend
-npm run build
-npm run lint
-cd ..
-cd backend
-.\.venv\Scripts\python.exe -m pytest -q
+npm ci
+npm run dev
 ```
 
-Backend tests use an in-memory SQLite database; the system status endpoint reports connectivity to the configured MySQL instance.
+Open `http://localhost:5173`. Vite forwards `/api` requests to the Flask server on port 5000.
+
+For the seeded demo roles, use the role buttons in the top banner, then enter the corresponding demo password documented in `database/03_seed_data.sql`. Selecting a role does not sign in automatically. Student registration is also available from the sign-in dialog.
+
+## Run checks
+
+From `frontend`:
+
+```powershell
+npm run build
+npm run lint
+```
+
+From `backend` with its virtual environment activated:
+
+```powershell
+python -m pytest -q
+```
+
+The tests use SQLite in memory. They do not check connectivity to your local MySQL server; the application's database status indicator provides that check.
+
+## Project layout
+
+```text
+backend/    Flask routes, models, services, and tests
+database/  MySQL setup, schema, and sample data
+frontend/   React application and Vite configuration
+```
