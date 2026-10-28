@@ -36,8 +36,17 @@ class EligibilityService:
         if not status_ok:
             reasons.append(f"Opportunity is currently {opportunity.status}.")
 
-        # 2. Deadline Check
+        # 2. Application window checks
         today = date.today()
+        opening_ok = opportunity.opening_date <= today
+        breakdown['opening_date'] = {
+            'passed': opening_ok,
+            'opening_date': opportunity.opening_date.isoformat(),
+            'details': "Application window is open" if opening_ok else f"Applications open on {opportunity.opening_date}",
+        }
+        if not opening_ok:
+            reasons.append(f"Applications open on {opportunity.opening_date}.")
+
         deadline_ok = opportunity.deadline >= today
         breakdown['deadline'] = {
             'passed': deadline_ok,
@@ -89,7 +98,7 @@ class EligibilityService:
             breakdown['department'] = {'passed': True, 'details': 'All departments are eligible.'}
 
         # Overall Academic & Policy Eligibility
-        is_eligible = status_ok and deadline_ok and cgpa_ok and grad_year_ok and dept_ok
+        is_eligible = status_ok and opening_ok and deadline_ok and cgpa_ok and grad_year_ok and dept_ok
 
         # 6. Check Duplicate Application
         existing_app = Application.query.filter_by(

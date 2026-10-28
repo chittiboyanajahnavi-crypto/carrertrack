@@ -248,7 +248,23 @@ def test_application_lifecycle_and_eligibility(client, app):
         db.session.commit()
 
         opp_dept = OpportunityDepartment(opportunity_id=opp.opportunity_id, department_id=dept.department_id)
-        db.session.add(opp_dept)
+        upcoming_opp = Opportunity(
+            company_id=company.company_id,
+            title='Upcoming Software Engineer',
+            opportunity_type='Full-Time',
+            description='Applications open next week',
+            min_cgpa=8.00,
+            graduation_year=2026,
+            location='Bengaluru',
+            salary_range='15 LPA',
+            opening_date=date.today() + timedelta(days=1),
+            deadline=date.today() + timedelta(days=20),
+            status='Active',
+        )
+        db.session.add_all([opp_dept, upcoming_opp])
+        db.session.commit()
+        db.session.add(OpportunityDepartment(opportunity_id=upcoming_opp.opportunity_id, department_id=dept.department_id))
+        db.session.commit()
 
         # Setup Eligible Student
         u_eligible = User(email='eligible@test.edu', role='student')
@@ -286,6 +302,7 @@ def test_application_lifecycle_and_eligibility(client, app):
         db.session.commit()
 
         opp_id = opp.opportunity_id
+        upcoming_opp_id = upcoming_opp.opportunity_id
 
     # 1. Login as ineligible student and attempt application
     client.post('/api/auth/login', json={'email': 'lowcgpa@test.edu', 'password': 'Pass@123'})
@@ -296,6 +313,13 @@ def test_application_lifecycle_and_eligibility(client, app):
 
     # 2. Login as eligible student and submit application
     client.post('/api/auth/login', json={'email': 'eligible@test.edu', 'password': 'Pass@123'})
+    upcoming_result = client.post('/api/applications', json={'opportunity_id': upcoming_opp_id})
+    assert upcoming_result.status_code == 400
+    upcoming_listing = client.get('/api/opportunities').get_json()['data']
+    upcoming_row = next(row for row in upcoming_listing if row['opportunity_id'] == upcoming_opp_id)
+    assert upcoming_row['is_eligible'] is False
+    assert any('open on' in reason.lower() for reason in upcoming_row['ineligibility_reasons'])
+
     res = client.post('/api/applications', json={
         'opportunity_id': opp_id,
         'student_notes': 'Excited to apply'
@@ -583,12 +607,44 @@ def test_interview_scheduling_and_lifecycle(client, app):
 def test_reports_and_csv_export(client, app):
     """Test analytical placement reports and CSV export."""
     with app.app_context():
+        dept = Department(code='RPT', name='Report Department')
+        company = Company(name='ReportCo', industry='Technology', contact_email='report@example.edu')
+        other_company = Company(name='OtherReportCo', industry='Finance', contact_email='other@example.edu')
         admin = User(email='admin_reports@test.edu', role='admin')
         admin.set_password('Admin@123')
         stud_user = User(email='student_reports@test.edu', role='student')
         stud_user.set_password('Student@123')
-        db.session.add_all([admin, stud_user])
+        db.session.add_all([dept, company, other_company, admin, stud_user])
         db.session.commit()
+
+        student = Student(
+            user_id=stud_user.user_id, roll_number='RPT001', first_name='Report',
+            last_name='Student', phone='1234567890', department_id=dept.department_id,
+            graduation_year=2027, cgpa=8.50,
+        )
+        matching_opp = Opportunity(
+            company_id=company.company_id, title='Report Internship', opportunity_type='Internship',
+            description='Filtered report fixture', min_cgpa=7.0, graduation_year=2027,
+            location='Bengaluru', work_mode='Hybrid', salary_range='Stipend',
+            opening_date=date.today() - timedelta(days=1), deadline=date.today() + timedelta(days=30),
+        )
+        other_opp = Opportunity(
+            company_id=other_company.company_id, title='Other Role', opportunity_type='Full-Time',
+            description='Unfiltered report fixture', min_cgpa=7.0, graduation_year=2028,
+            location='Hyderabad', work_mode='On-Site', salary_range='Salary',
+            opening_date=date.today() - timedelta(days=1), deadline=date.today() + timedelta(days=30),
+        )
+        db.session.add_all([student, matching_opp, other_opp])
+        db.session.commit()
+        db.session.add_all([
+            Application(student_id=student.student_id, opportunity_id=matching_opp.opportunity_id, status='Selected'),
+            Application(student_id=student.student_id, opportunity_id=other_opp.opportunity_id, status='Applied'),
+        ])
+        db.session.commit()
+        report_filter = (
+            f'?department_id={dept.department_id}&graduation_year=2027'
+            f'&company_id={company.company_id}&opportunity_type=Internship'
+        )
 
     # 1. Student accessing reports is forbidden (403)
     client.post('/api/auth/login', json={'email': 'student_reports@test.edu', 'password': 'Student@123'})
@@ -600,7 +656,20 @@ def test_reports_and_csv_export(client, app):
     client.post('/api/auth/login', json={'email': 'admin_reports@test.edu', 'password': 'Admin@123'})
     res_summary = client.get('/api/reports/summary')
     assert res_summary.status_code == 200
-    assert 'total_applications' in res_summary.get_json()['data']
+    assert res_summary.get_json()['data']['total_applications'] == 2
+
+    # Filtered aggregates must use the same scope as the summary totals.
+    res_filtered = client.get(f'/api/reports/summary{report_filter}')
+    filtered_data = res_filtered.get_json()['data']
+    assert res_filtered.status_code == 200
+    assert filtered_data['total_applications'] == 1
+    assert filtered_data['placed_students'] == 1
+    assert filtered_data['company_summary'] == [{
+        'company_name': 'ReportCo', 'applications_count': 1, 'selected_count': 1,
+    }]
+    assert filtered_data['opportunity_type_summary'] == [{
+        'type': 'Internship', 'applications': 1, 'selections': 1,
+    }]
 
     # 3. Admin exporting CSV succeeds
     res_csv = client.get('/api/reports/export/csv')

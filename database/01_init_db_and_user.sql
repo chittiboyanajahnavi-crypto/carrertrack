@@ -12,13 +12,13 @@ CREATE DATABASE IF NOT EXISTS careertrack_db
     COLLATE utf8mb4_unicode_ci;
 
 -- 2. Create the dedicated application user
--- NOTE: You may customize 'CareerTrack@2026' to your own secure password.
--- Match this password with DB_PASSWORD in backend/.env.
-CREATE USER IF NOT EXISTS 'careertrack_user'@'localhost' 
-    IDENTIFIED BY 'CareerTrack@2026';
+-- Replace the password placeholder before running; use the same value in backend/.env.
 
--- 3. Grant privileges ONLY on the careertrack_db database (principle of least privilege)
-GRANT ALL PRIVILEGES ON careertrack_db.* TO 'careertrack_user'@'localhost';
+CREATE USER IF NOT EXISTS 'careertrack_user'@'localhost' 
+    IDENTIFIED BY 'SET_A_UNIQUE_PASSWORD_BEFORE_RUNNING';
+
+-- 3. Grant the data permissions used by the application.
+GRANT SELECT, INSERT, UPDATE, DELETE ON careertrack_db.* TO 'careertrack_user'@'localhost';
 
 -- 4. Apply changes
 FLUSH PRIVILEGES;

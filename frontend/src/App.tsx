@@ -7,12 +7,59 @@ import type {
   Interview,
   AdminMetrics,
   Department,
-  Skill,
   Company,
   StudentProfile,
   SystemStatus,
   StudentDashboard,
 } from './types';
+
+function localDateInput(daysAhead = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysAhead);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+}
+
+function localDateTimeInput(daysAhead = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysAhead);
+  date.setHours(10, 0, 0, 0);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
+type IconName = 'student' | 'company' | 'shield' | 'dashboard' | 'briefcase' | 'file' | 'calendar' | 'users' | 'profile' | 'interview' | 'settings' | 'pin' | 'currency' | 'target' | 'clock' | 'link' | 'download' | 'mail' | 'globe' | 'warning' | 'check';
+const DEMO_EMAILS = {
+  student: 'aarav.sharma@careertrack.edu',
+  recruiter: 'priya.sharma@google.com',
+  admin: 'admin@careertrack.edu',
+};
+
+function AppIcon({ name, size = 16 }: { name: IconName; size?: number }) {
+  const paths: Record<IconName, React.ReactNode> = {
+    student: <><circle cx="12" cy="8" r="3" /><path d="M5 20c.8-3.2 3.1-5 7-5s6.2 1.8 7 5M3 6l9-4 9 4-9 4-9-4Z" /><path d="M5 7v5" /></>,
+    company: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M10 21v-3h4v3" /></>,
+    shield: <><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" /><path d="m9 12 2 2 4-4" /></>,
+    dashboard: <><rect x="3" y="3" width="8" height="8" rx="1" /><rect x="13" y="3" width="8" height="5" rx="1" /><rect x="13" y="10" width="8" height="11" rx="1" /><rect x="3" y="13" width="8" height="8" rx="1" /></>,
+    briefcase: <><rect x="3" y="7" width="18" height="14" rx="2" /><path d="M8 7V4h8v3M3 12h18m-11 0v2h4v-2" /></>,
+    file: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6M8 13h8m-8 4h8" /></>,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18M8 14h2m4 0h2m-8 3h2" /></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="10" cy="7" r="4" /><path d="M20 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" /></>,
+    profile: <><circle cx="12" cy="8" r="4" /><path d="M5 21a7 7 0 0 1 14 0" /></>,
+    interview: <><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z" /></>,
+    settings: <><path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6m2-6h6m2 8h6" /></>,
+    pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2" /></>,
+    currency: <><circle cx="12" cy="12" r="9" /><path d="M15 8h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9m3-10v12" /></>,
+    target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>,
+    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+    link: <><path d="M10 13a5 5 0 0 0 7.1 0l3-3A5 5 0 0 0 13 2.9l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21.1l1.7-1.7" /></>,
+    download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5 5 5 5-5m-5 5V3" /></>,
+    mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>,
+    globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18m0-18a14 14 0 0 0 0 18" /></>,
+    warning: <><path d="m10.3 3.9-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4m0 4h.01" /></>,
+    check: <><path d="m5 12 4 4L19 6" /></>,
+  };
+
+  return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+}
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<AuthProfile | null>(null);
@@ -29,7 +76,6 @@ export default function App() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [adminMetrics, setAdminMetrics] = useState<AdminMetrics | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [, setSkills] = useState<Skill[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [studentsList, setStudentsList] = useState<StudentProfile[]>([]);
   const [studentDashboard, setStudentDashboard] = useState<StudentDashboard | null>(null);
@@ -49,7 +95,7 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const [registration, setRegistration] = useState({ email: '', password: '', first_name: '', last_name: '', roll_number: '', department_id: '', graduation_year: String(new Date().getFullYear() + 4), cgpa: '', phone: '' });
+  const [registration, setRegistration] = useState(() => ({ email: '', password: '', first_name: '', last_name: '', roll_number: '', department_id: '', graduation_year: String(new Date().getFullYear() + 4), cgpa: '', phone: '' }));
 
   const [applyModalOpp, setApplyModalOpp] = useState<Opportunity | null>(null);
   const [applyNotes, setApplyNotes] = useState('');
@@ -63,19 +109,14 @@ export default function App() {
   const [newOppMode, setNewOppMode] = useState('Hybrid');
   const [newOppSalary, setNewOppSalary] = useState('₹18,00,000 - ₹24,00,000');
   const [newOppMinCgpa, setNewOppMinCgpa] = useState('7.5');
-  const [newOppDeadline, setNewOppDeadline] = useState('2026-11-30');
+  const [newOppDeadline, setNewOppDeadline] = useState(() => localDateInput(30));
   const [selectedDepts, setSelectedDepts] = useState<number[]>([]);
 
   const [scheduleModalApp, setScheduleModalApp] = useState<Application | null>(null);
   const [schedRoundName, setSchedRoundName] = useState('Technical Interview 1');
-  const [schedDate, setSchedDate] = useState('2026-10-25T10:00');
+  const [schedDate, setSchedDate] = useState(() => localDateTimeInput(7));
   const [schedMode, setSchedMode] = useState('Video Call');
   const [schedUrl, setSchedUrl] = useState('https://meet.google.com/ct-interview-demo');
-
-  // Load initial context
-  useEffect(() => {
-    initApp();
-  }, []);
 
   const showNotification = (msg: string, isErr = false) => {
     if (isErr) {
@@ -88,33 +129,23 @@ export default function App() {
   };
 
   const initApp = async () => {
-    setLoading(true);
     try {
-      // 1. Fetch system & DB status
-      const status = await api.getSystemStatus().catch(() => null);
-      if (status) setSystemStatus(status);
-
-      // 2. Fetch master taxonomies
-      const [deptData, skillData] = await Promise.all([
+      // Independent startup requests run together to reduce initial wait time.
+      const [status, deptData, user] = await Promise.all([
+        api.getSystemStatus().catch(() => null),
         api.getDepartments().catch(() => []),
-        api.getSkills().catch(() => []),
+        api.getCurrentUser().catch(() => null),
       ]);
+      setSystemStatus(status);
+      if (!status) showNotification('Could not reach the backend status endpoint.', true);
       setDepartments(deptData);
-      setSkills(skillData);
 
-      // 3. Check current authenticated user session
-      try {
-        const user = await api.getCurrentUser();
-        const seededDemoEmails = ['aarav.sharma@careertrack.edu', 'priya.sharma@google.com', 'admin@careertrack.edu'];
-        if (seededDemoEmails.includes(user.email.toLowerCase())) {
-          await api.logout();
-          setCurrentUser(null);
-          setOpportunities([]);
-        } else {
-          setCurrentUser(user);
-          await loadUserData(user);
-        }
-      } catch {
+      if (user) {
+        // /auth/me only returns a user after the backend validates the session.
+        // Keep seeded demo accounts signed in across refreshes as well.
+        setCurrentUser(user);
+        await loadUserData(user);
+      } else {
         // Guest mode
         setCurrentUser(null);
         setOpportunities([]);
@@ -127,20 +158,25 @@ export default function App() {
     }
   };
 
-  const loadUserData = async (user: AuthProfile) => {
+  // Load initial context after the initializer is defined.
+  useEffect(() => {
+    void Promise.resolve().then(initApp);
+  }, []);
+
+  async function loadUserData(user: AuthProfile): Promise<boolean> {
     try {
       if (user.role === 'student') {
-        const [opps, apps, ints, dashboard, profile] = await Promise.all([
+        const [opps, apps, ints, dashboard] = await Promise.all([
           api.getOpportunities(),
-          api.getMyApplications().catch(() => []),
-          api.getInterviews().catch(() => []),
-          api.getStudentDashboard().catch(() => null),
-          api.getMyProfile().catch(() => user.student ?? null),
+          api.getMyApplications(),
+          api.getInterviews(),
+          api.getStudentDashboard(),
         ]);
         setOpportunities(opps);
         setMyApplications(apps);
         setInterviews(ints);
         setStudentDashboard(dashboard);
+        const profile = dashboard.profile;
         if (profile) {
           setProfilePhone(profile.phone ?? '');
           setProfileResume(profile.resume_url ?? '');
@@ -150,8 +186,8 @@ export default function App() {
       } else if (user.role === 'recruiter') {
         const [opps, apps, ints] = await Promise.all([
           api.getOpportunities(user.recruiter?.company_id ? { company_id: user.recruiter.company_id } : {}),
-          api.listApplications().catch(() => []),
-          api.getInterviews().catch(() => []),
+          api.listApplications(),
+          api.getInterviews(),
         ]);
         setOpportunities(opps);
         setCompanyApplications(apps);
@@ -159,10 +195,10 @@ export default function App() {
         setActiveTab('applicants');
       } else if (user.role === 'admin') {
         const [metrics, opps, stds, comps] = await Promise.all([
-          api.getAdminMetrics().catch(() => null),
-          api.getOpportunities().catch(() => []),
-          api.getStudents().catch(() => []),
-          api.getCompanies().catch(() => []),
+          api.getAdminMetrics(),
+          api.getOpportunities(),
+          api.getStudents(),
+          api.getCompanies(),
         ]);
         setAdminMetrics(metrics);
         setOpportunities(opps);
@@ -170,16 +206,17 @@ export default function App() {
         setCompanies(comps);
         setActiveTab('overview');
       }
+      return true;
     } catch (err: unknown) {
       console.error(err);
       showNotification((err as Error).message || 'Could not load account data.', true);
+      return false;
     }
-  };
+  }
 
   // Demo role selection only fills a seeded account email; successful auth still requires the user's password.
   const handleDemoLogin = async (role: 'student' | 'recruiter' | 'admin') => {
-    const emails = { student: 'aarav.sharma@careertrack.edu', recruiter: 'priya.sharma@google.com', admin: 'admin@careertrack.edu' };
-    setLoginEmail(emails[role]);
+    setLoginEmail(DEMO_EMAILS[role]);
     setLoginPassword('');
     setAuthMode('login');
     setLoginModalOpen(true);
@@ -194,8 +231,7 @@ export default function App() {
       setLoginModalOpen(false);
       setLoginEmail('');
       setLoginPassword('');
-      await loadUserData(user);
-      showNotification(`Welcome back, ${user.email}!`);
+      if (await loadUserData(user)) showNotification(`Welcome back, ${user.email}!`);
     } catch (err: unknown) {
       setCurrentUser(null);
       setActiveTab('opportunities');
@@ -293,7 +329,7 @@ export default function App() {
         work_mode: newOppMode,
         salary_range: newOppSalary,
         min_cgpa: parseFloat(newOppMinCgpa) || 7.0,
-        opening_date: new Date().toISOString().slice(0, 10),
+        opening_date: localDateInput(),
         deadline: newOppDeadline,
         department_ids: selectedDepts.length > 0 ? selectedDepts : undefined,
       });
@@ -315,7 +351,7 @@ export default function App() {
       await api.scheduleInterview({
         application_id: scheduleModalApp.application_id,
         round_name: schedRoundName,
-        scheduled_at: schedDate.replace('T', ' ') + ':00',
+        scheduled_at: `${schedDate}:00`,
         mode: schedMode,
         meeting_location_or_link: schedUrl,
       });
@@ -332,6 +368,7 @@ export default function App() {
     const matchesSearch =
       !oppSearch ||
       opp.title.toLowerCase().includes(oppSearch.toLowerCase()) ||
+      opp.description.toLowerCase().includes(oppSearch.toLowerCase()) ||
       opp.company_name?.toLowerCase().includes(oppSearch.toLowerCase()) ||
       opp.location.toLowerCase().includes(oppSearch.toLowerCase());
     const matchesType = !oppType || opp.opportunity_type === oppType;
@@ -352,8 +389,11 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       {loading && (
         <div
+          className="loading-indicator"
+          aria-hidden="true"
           style={{
             position: 'fixed',
             top: 0,
@@ -361,14 +401,16 @@ export default function App() {
             right: 0,
             height: 3,
             zIndex: 99999,
-            background: 'linear-gradient(90deg, #6366f1, #06b6d4, #a855f7)',
-            animation: 'pulse 1s infinite',
+            background: '#ff5ca8',
           }}
         />
       )}
       {/* Toast Notifications */}
       {errorMsg && (
         <div
+          className="toast"
+          role="alert"
+          aria-live="assertive"
           style={{
             position: 'fixed',
             top: 20,
@@ -385,8 +427,10 @@ export default function App() {
             gap: 10,
           }}
         >
-          <span>⚠️ {errorMsg}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><AppIcon name="warning" />{errorMsg}</span>
           <button
+            type="button"
+            aria-label="Dismiss error message"
             onClick={() => setErrorMsg(null)}
             style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
           >
@@ -397,6 +441,9 @@ export default function App() {
 
       {successMsg && (
         <div
+          className="toast"
+          role="status"
+          aria-live="polite"
           style={{
             position: 'fixed',
             top: 20,
@@ -413,8 +460,10 @@ export default function App() {
             gap: 10,
           }}
         >
-          <span>✅ {successMsg}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><AppIcon name="check" />{successMsg}</span>
           <button
+            type="button"
+            aria-label="Dismiss confirmation message"
             onClick={() => setSuccessMsg(null)}
             style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
           >
@@ -426,49 +475,47 @@ export default function App() {
       {/* Quick Demo Switcher Bar */}
       <div className="role-switcher-banner">
         <div className="role-switcher-group">
-          <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>DEMO ROLES:</span>
+          <span className="demo-signin-label">Demo account sign-in</span>
           <button
-            className={`switcher-pill ${currentUser?.role === 'student' ? 'active' : ''}`}
+            className={`switcher-pill ${currentUser?.email.toLowerCase() === DEMO_EMAILS.student ? 'active' : ''}`}
             onClick={() => handleDemoLogin('student')}
           >
-            <span>🎓</span> Student (Jahnavi - CSE)
+            <AppIcon name="student" /> Student (Jahnavi - CSE)
           </button>
           <button
-            className={`switcher-pill ${currentUser?.role === 'recruiter' ? 'active' : ''}`}
+            className={`switcher-pill ${currentUser?.email.toLowerCase() === DEMO_EMAILS.recruiter ? 'active' : ''}`}
             onClick={() => handleDemoLogin('recruiter')}
           >
-            <span>🏢</span> Recruiter (Priya @ Google)
+            <AppIcon name="company" /> Recruiter (Priya @ Google)
           </button>
           <button
-            className={`switcher-pill ${currentUser?.role === 'admin' ? 'active' : ''}`}
+            className={`switcher-pill ${currentUser?.email.toLowerCase() === DEMO_EMAILS.admin ? 'active' : ''}`}
             onClick={() => handleDemoLogin('admin')}
           >
-            <span>🛡️</span> Placement Admin
+            <AppIcon name="shield" /> Placement Admin
           </button>
+          <span className="demo-signin-hint">Choose a role, then enter its password.</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {systemStatus && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.8rem', color: '#34d399' }}>
-              <span className="pulse-dot" style={{ background: systemStatus.database.status === 'connected' ? '#10b981' : '#f43f5e' }}></span>
-              <span style={{ color: systemStatus.database.status === 'connected' ? '#34d399' : '#fda4af' }}>
-                MySQL {systemStatus.database.status === 'connected' ? 'Connected' : 'Disconnected'} ({systemStatus.database.tables_count} tables)
-              </span>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Main Header */}
       <header className="header-container">
         <div className="header-content">
-          <div className="logo-group" onClick={() => setActiveTab('opportunities')}>
-            <div className="logo-icon-box">CT</div>
+          <a href="/" className="logo-group" aria-label="CareerTrack home">
+            <div className="logo-icon-box" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 24V8h7l5 8h8" />
+                <circle cx="6" cy="24" r="2" fill="currentColor" />
+                <circle cx="26" cy="16" r="2" fill="currentColor" />
+                <path d="m22 12 4 4-4 4" />
+              </svg>
+            </div>
             <div className="logo-text">
               <h1>CareerTrack</h1>
               <span>Student Placement & Internship System</span>
             </div>
-          </div>
+          </a>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {currentUser ? (
@@ -499,41 +546,45 @@ export default function App() {
       </header>
 
       {/* Main Body Content */}
-      <main className="main-content">
+      <main id="main-content" className="main-content" tabIndex={-1}>
         {/* Navigation Tabs based on Role */}
         <nav className="tabs-nav">
           {(!currentUser || currentUser.role === 'student') && (
             <>
               {currentUser?.role === 'student' && (
-                <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-                  📊 Dashboard
+                <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} aria-current={activeTab === 'dashboard' ? 'page' : undefined} onClick={() => setActiveTab('dashboard')}>
+                  <AppIcon name="dashboard" /> Dashboard
                 </button>
               )}
               <button
                 className={`tab-btn ${activeTab === 'opportunities' ? 'active' : ''}`}
+                aria-current={activeTab === 'opportunities' ? 'page' : undefined}
                 onClick={() => setActiveTab('opportunities')}
               >
-                💼 Explore Opportunities ({opportunities.length})
+                <AppIcon name="briefcase" /> Explore Opportunities ({opportunities.length})
               </button>
               {currentUser?.role === 'student' && (
                 <>
                   <button
                     className={`tab-btn ${activeTab === 'my_applications' ? 'active' : ''}`}
+                    aria-current={activeTab === 'my_applications' ? 'page' : undefined}
                     onClick={() => setActiveTab('my_applications')}
                   >
-                    📄 My Applications ({myApplications.length})
+                    <AppIcon name="file" /> My Applications ({myApplications.length})
                   </button>
                   <button
                     className={`tab-btn ${activeTab === 'interviews' ? 'active' : ''}`}
+                    aria-current={activeTab === 'interviews' ? 'page' : undefined}
                     onClick={() => setActiveTab('interviews')}
                   >
-                    📅 Interviews ({interviews.length})
+                    <AppIcon name="calendar" /> Interviews ({interviews.length})
                   </button>
                   <button
                     className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
+                    aria-current={activeTab === 'profile' ? 'page' : undefined}
                     onClick={() => setActiveTab('profile')}
                   >
-                    🎓 My Student Profile
+                    <AppIcon name="profile" /> My Student Profile
                   </button>
                 </>
               )}
@@ -544,21 +595,24 @@ export default function App() {
             <>
               <button
                 className={`tab-btn ${activeTab === 'applicants' ? 'active' : ''}`}
+                aria-current={activeTab === 'applicants' ? 'page' : undefined}
                 onClick={() => setActiveTab('applicants')}
               >
-                👥 Candidate Pipeline ({companyApplications.length})
+                <AppIcon name="users" /> Candidate Pipeline ({companyApplications.length})
               </button>
               <button
                 className={`tab-btn ${activeTab === 'opportunities' ? 'active' : ''}`}
+                aria-current={activeTab === 'opportunities' ? 'page' : undefined}
                 onClick={() => setActiveTab('opportunities')}
               >
-                💼 Job Postings ({opportunities.length})
+                <AppIcon name="briefcase" /> Job Postings ({opportunities.length})
               </button>
               <button
                 className={`tab-btn ${activeTab === 'interviews' ? 'active' : ''}`}
+                aria-current={activeTab === 'interviews' ? 'page' : undefined}
                 onClick={() => setActiveTab('interviews')}
               >
-                🎙️ Scheduled Interviews ({interviews.length})
+                <AppIcon name="interview" /> Scheduled Interviews ({interviews.length})
               </button>
             </>
           )}
@@ -567,33 +621,38 @@ export default function App() {
             <>
               <button
                 className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+                aria-current={activeTab === 'overview' ? 'page' : undefined}
                 onClick={() => setActiveTab('overview')}
               >
-                📊 Executive Dashboard
+                <AppIcon name="dashboard" /> Executive Dashboard
               </button>
               <button
                 className={`tab-btn ${activeTab === 'opportunities' ? 'active' : ''}`}
+                aria-current={activeTab === 'opportunities' ? 'page' : undefined}
                 onClick={() => setActiveTab('opportunities')}
               >
-                💼 All Opportunities ({opportunities.length})
+                <AppIcon name="briefcase" /> All Opportunities ({opportunities.length})
               </button>
               <button
                 className={`tab-btn ${activeTab === 'students' ? 'active' : ''}`}
+                aria-current={activeTab === 'students' ? 'page' : undefined}
                 onClick={() => setActiveTab('students')}
               >
-                🎓 Students Roster ({studentsList.length})
+                <AppIcon name="student" /> Students Roster ({studentsList.length})
               </button>
               <button
                 className={`tab-btn ${activeTab === 'companies' ? 'active' : ''}`}
+                aria-current={activeTab === 'companies' ? 'page' : undefined}
                 onClick={() => setActiveTab('companies')}
               >
-                🏢 Partner Companies ({companies.length})
+                <AppIcon name="company" /> Partner Companies ({companies.length})
               </button>
               <button
                 className={`tab-btn ${activeTab === 'database' ? 'active' : ''}`}
+                aria-current={activeTab === 'database' ? 'page' : undefined}
                 onClick={() => setActiveTab('database')}
               >
-                ⚙️ Database Health (MySQL)
+                <AppIcon name="settings" /> Database Health
               </button>
             </>
           )}
@@ -660,7 +719,7 @@ export default function App() {
             <div className="filter-bar">
               <input
                 type="text"
-                placeholder="Search job title, company, or tech stack..."
+                placeholder="Search title, company, description, or location"
                 className="input-control"
                 style={{ flex: '1 1 240px' }}
                 value={oppSearch}
@@ -674,9 +733,9 @@ export default function App() {
                 onChange={(e) => setOppType(e.target.value)}
               >
                 <option value="">All Types</option>
-                <option value="Full-time">Full-time</option>
+                <option value="Full-Time">Full-Time</option>
                 <option value="Internship">Internship</option>
-                <option value="Co-op">Co-op</option>
+                <option value="Part-Time">Part-Time</option>
               </select>
 
               <select
@@ -686,7 +745,7 @@ export default function App() {
                 onChange={(e) => setOppMode(e.target.value)}
               >
                 <option value="">All Modes</option>
-                <option value="On-site">On-site</option>
+                <option value="On-Site">On-Site</option>
                 <option value="Hybrid">Hybrid</option>
                 <option value="Remote">Remote</option>
               </select>
@@ -735,10 +794,10 @@ export default function App() {
                     </p>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                      <div>📍 {opp.location} ({opp.work_mode})</div>
-                      <div>💰 {opp.salary_range || 'Competitive'}</div>
-                      <div>🎯 Min CGPA: {opp.min_cgpa}</div>
-                      <div>📅 Deadline: {opp.deadline}</div>
+                      <div><AppIcon name="pin" /> {opp.location} ({opp.work_mode})</div>
+                      <div><AppIcon name="currency" /> {opp.salary_range || 'Competitive'}</div>
+                      <div><AppIcon name="target" /> Min CGPA: {opp.min_cgpa}</div>
+                      <div><AppIcon name="calendar" /> Deadline: {opp.deadline}</div>
                     </div>
 
                     {/* Required Skills */}
@@ -994,7 +1053,7 @@ export default function App() {
                                 className="btn btn-primary btn-sm"
                                 onClick={() => setScheduleModalApp(app)}
                               >
-                                🎙️ Interview
+                                <AppIcon name="interview" /> Interview
                               </button>
                             )}
 
@@ -1064,7 +1123,7 @@ export default function App() {
                     )}
 
                     <div style={{ fontSize: '0.85rem', color: '#fbbf24', marginTop: '0.5rem' }}>
-                      🕒 {new Date(intv.scheduled_at).toLocaleString()}
+                      <AppIcon name="clock" /> {new Date(intv.scheduled_at).toLocaleString()}
                     </div>
 
                     {intv.meeting_url && (
@@ -1076,7 +1135,7 @@ export default function App() {
                           className="btn btn-primary btn-sm"
                           style={{ width: '100%' }}
                         >
-                          Join Meeting URL 🔗
+                          <AppIcon name="link" /> Join Meeting URL
                         </a>
                       </div>
                     )}
@@ -1099,7 +1158,7 @@ export default function App() {
                     width: 64,
                     height: 64,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+                    background: '#ff5ca8',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1133,7 +1192,7 @@ export default function App() {
 
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>DEPARTMENT CODE</div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#818cf8' }}>{currentUser.student.department_code}</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ff78b7' }}>{currentUser.student.department_code}</div>
                 </div>
               </div>
 
@@ -1183,7 +1242,7 @@ export default function App() {
                 download="careertrack_placement_report.csv"
                 className="btn btn-emerald"
               >
-                📥 Export CSV Placement Report
+                <AppIcon name="download" /> Export CSV Placement Report
               </a>
             </div>
 
@@ -1219,7 +1278,7 @@ export default function App() {
                 </div>
 
                 {/* Breakdown Grids */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '1.5rem' }}>
                   {/* Department Stats */}
                   <div className="glass-panel" style={{ padding: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff', marginBottom: '1rem' }}>
@@ -1241,7 +1300,7 @@ export default function App() {
                               style={{
                                 width: `${dept.placement_rate}%`,
                                 height: '100%',
-                                background: 'linear-gradient(90deg, #6366f1, #06b6d4)',
+                                background: '#ff5ca8',
                                 borderRadius: 3,
                               }}
                             />
@@ -1384,11 +1443,11 @@ export default function App() {
                   </div>
 
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>
-                    ✉️ {comp.contact_email}
+                    <AppIcon name="mail" /> {comp.contact_email}
                   </div>
                   {comp.website && (
                     <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', marginTop: '0.25rem' }}>
-                      🌐 <a href={comp.website} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{comp.website}</a>
+                      <AppIcon name="globe" /> <a href={comp.website} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{comp.website}</a>
                     </div>
                   )}
 
@@ -1412,10 +1471,10 @@ export default function App() {
                 <div>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff' }}>MySQL Database Schema Integrity</h2>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    Dialect: <strong>{systemStatus.database.dialect}</strong> | Host: <strong>127.0.0.1:3306</strong>
+                    Database: <strong>{systemStatus.database.dialect}</strong>
                   </div>
                 </div>
-                <span className="badge badge-emerald" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                <span className={`badge ${systemStatus.database.status === 'connected' ? 'badge-emerald' : 'badge-rose'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
                   ● {systemStatus.database.status.toUpperCase()}
                 </span>
               </div>
@@ -1710,7 +1769,7 @@ export default function App() {
                     onChange={(e) => setSchedMode(e.target.value)}
                   >
                     <option value="Video Call">Video Call</option>
-                    <option value="In-Person">In-person</option>
+                    <option value="In-Person">In-Person</option>
                     <option value="Phone">Phone</option>
                   </select>
                 </div>
@@ -1747,8 +1806,8 @@ export default function App() {
       {/* ============================================================== */}
         {loginModalOpen && (
         <div className="modal-overlay" onClick={() => setLoginModalOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>
+          <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="auth-dialog-title" onClick={(e) => e.stopPropagation()}>
+            <h3 id="auth-dialog-title" style={{ fontSize: '1.35rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>
               {authMode === 'login' ? 'Sign In to CareerTrack' : 'Create a student account'}
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
@@ -1757,11 +1816,13 @@ export default function App() {
 
             {authMode === 'login' ? <form onSubmit={handleCustomLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '0.35rem' }}>
+                <label htmlFor="auth-email" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                   Email Address
                 </label>
                 <input
                   type="email"
+                  id="auth-email"
+                  autoComplete="username"
                   required
                   placeholder="name@example.com"
                   className="input-control"
@@ -1771,11 +1832,13 @@ export default function App() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '0.35rem' }}>
+                <label htmlFor="auth-password" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                   Password
                 </label>
                 <input
                   type="password"
+                  id="auth-password"
+                  autoComplete="current-password"
                   required
                   placeholder="••••••••"
                   className="input-control"
@@ -1793,18 +1856,18 @@ export default function App() {
                   {loginLoading ? 'Signing In...' : 'Sign In'}
                 </button>
               </div>
-            </form> : <form onSubmit={handleRegistration} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem' }}>
-              <input className="input-control" type="email" required placeholder="Email" value={registration.email} onChange={(e) => setRegistration({ ...registration, email: e.target.value })} />
-              <input className="input-control" type="password" minLength={8} required placeholder="Password (8+ characters)" value={registration.password} onChange={(e) => setRegistration({ ...registration, password: e.target.value })} />
-              <input className="input-control" required placeholder="First name" value={registration.first_name} onChange={(e) => setRegistration({ ...registration, first_name: e.target.value })} />
-              <input className="input-control" required placeholder="Last name" value={registration.last_name} onChange={(e) => setRegistration({ ...registration, last_name: e.target.value })} />
-              <input className="input-control" required placeholder="Roll number" value={registration.roll_number} onChange={(e) => setRegistration({ ...registration, roll_number: e.target.value })} />
-              <select className="select-control" required value={registration.department_id} onChange={(e) => setRegistration({ ...registration, department_id: e.target.value })}>
+            </form> : <form className="registration-form" onSubmit={handleRegistration}>
+              <label className="registration-field">Email<input className="input-control" type="email" autoComplete="email" required value={registration.email} onChange={(e) => setRegistration({ ...registration, email: e.target.value })} /></label>
+              <label className="registration-field">Password<input className="input-control" type="password" autoComplete="new-password" minLength={8} required aria-describedby="registration-password-help" value={registration.password} onChange={(e) => setRegistration({ ...registration, password: e.target.value })} /><span id="registration-password-help">Use at least 8 characters.</span></label>
+              <label className="registration-field">First name<input className="input-control" autoComplete="given-name" required value={registration.first_name} onChange={(e) => setRegistration({ ...registration, first_name: e.target.value })} /></label>
+              <label className="registration-field">Last name<input className="input-control" autoComplete="family-name" required value={registration.last_name} onChange={(e) => setRegistration({ ...registration, last_name: e.target.value })} /></label>
+              <label className="registration-field">Roll number<input className="input-control" autoComplete="off" required value={registration.roll_number} onChange={(e) => setRegistration({ ...registration, roll_number: e.target.value })} /></label>
+              <label className="registration-field">Department<select className="select-control" required value={registration.department_id} onChange={(e) => setRegistration({ ...registration, department_id: e.target.value })}>
                 <option value="">Select department</option>{departments.map((d) => <option key={d.department_id} value={d.department_id}>{d.code} · {d.name}</option>)}
-              </select>
-              <input className="input-control" type="number" min="2000" max="2100" required placeholder="Graduation year" value={registration.graduation_year} onChange={(e) => setRegistration({ ...registration, graduation_year: e.target.value })} />
-              <input className="input-control" type="number" min="0" max="10" step="0.01" required placeholder="CGPA" value={registration.cgpa} onChange={(e) => setRegistration({ ...registration, cgpa: e.target.value })} />
-              <input className="input-control" type="tel" required placeholder="Phone" value={registration.phone} onChange={(e) => setRegistration({ ...registration, phone: e.target.value })} />
+              </select></label>
+              <label className="registration-field">Graduation year<input className="input-control" type="number" min="2000" max="2100" autoComplete="off" required value={registration.graduation_year} onChange={(e) => setRegistration({ ...registration, graduation_year: e.target.value })} /></label>
+              <label className="registration-field">CGPA<input className="input-control" type="number" min="0" max="10" step="0.01" required value={registration.cgpa} onChange={(e) => setRegistration({ ...registration, cgpa: e.target.value })} /></label>
+              <label className="registration-field">Phone<input className="input-control" type="tel" autoComplete="tel" required value={registration.phone} onChange={(e) => setRegistration({ ...registration, phone: e.target.value })} /></label>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '.5rem', gridColumn: '1 / -1' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setAuthMode('login')}>Back to sign in</button>
                 <button type="submit" className="btn btn-primary" disabled={loginLoading}>{loginLoading ? 'Creating…' : 'Create account'}</button>

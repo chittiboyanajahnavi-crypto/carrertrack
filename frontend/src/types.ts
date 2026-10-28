@@ -77,9 +77,9 @@ export interface Opportunity {
   company_industry?: string;
   title: string;
   description: string;
-  opportunity_type: 'Full-time' | 'Internship' | 'Co-op';
+  opportunity_type: 'Full-Time' | 'Internship' | 'Part-Time';
   location: string;
-  work_mode: 'On-site' | 'Hybrid' | 'Remote';
+  work_mode: 'On-Site' | 'Hybrid' | 'Remote';
   salary_range?: string;
   min_cgpa: number;
   graduation_year?: number;

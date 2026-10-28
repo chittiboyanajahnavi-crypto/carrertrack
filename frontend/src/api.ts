@@ -12,7 +12,7 @@ import type {
   StudentDashboard,
 } from './types';
 
-const BASE_URL = '/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 interface ApiResponse<T> {
   success: boolean;
@@ -242,7 +242,12 @@ export const api = {
   },
 
   async getStudentDashboard(): Promise<StudentDashboard> {
-    return request<StudentDashboard>('/students/dashboard');
+    const dashboard = await request<StudentDashboard>('/students/dashboard');
+    return {
+      ...dashboard,
+      profile: normalizeStudent(dashboard.profile),
+      recommended_opportunities: (dashboard.recommended_opportunities ?? []).map(normalizeOpportunity),
+    };
   },
 
   async getMyProfile(): Promise<StudentProfile> {
@@ -277,7 +282,7 @@ export const api = {
 
   // System status
   async getSystemStatus(): Promise<SystemStatus> {
-    const res = await fetch('/api/status');
+    const res = await fetch(`${BASE_URL}/status`, { credentials: 'include' });
     return res.json();
   },
 };

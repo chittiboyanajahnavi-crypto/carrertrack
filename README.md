@@ -25,6 +25,12 @@ The MySQL schema contains 13 tables for users, students, recruiters, companies, 
 - Database: MySQL 8
 - Backend tests: pytest with an in-memory SQLite database
 
+## Hosted college demo
+
+`render.yaml` defines the React static site and Flask API. The API expects a reachable MySQL 8 database; the local MySQL server on your laptop is not reachable from Render. For a hosted demo, create a separate MySQL copy in Aiven, then import the existing `careertrack_db` dump into it. Keep `backend/.env` and database credentials out of GitHub. The Render Blueprint prompts for the hosted database connection fields and generates the Flask session secret.
+
+After the hosted database is ready, open Render, choose **New → Blueprint**, connect `chittiboyanajahnavi-crypto/carrertrack`, and deploy the Blueprint from the repository root. It creates the API and frontend services on the free plans. Check the API's `/api/health` endpoint and sign in to the deployed frontend before presenting. Free hosting can sleep when idle, so open the app shortly before the demo.
+
 ## Run locally on Windows
 
 You will need Python 3.11 or later, Node.js with npm, and MySQL 8.
@@ -93,7 +99,7 @@ From `backend` with its virtual environment activated:
 python -m pytest -q
 ```
 
-The tests use SQLite in memory. They do not check connectivity to your local MySQL server; the application's database status indicator provides that check.
+The tests use SQLite in memory. They do not check connectivity to your local MySQL server; an admin can check the configured connection and table counts on the **Database Health** page after signing in.
 
 ## Project layout
 

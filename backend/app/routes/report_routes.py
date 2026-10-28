@@ -1,7 +1,7 @@
 import csv
 from io import StringIO
 from flask import Blueprint, request, make_response
-from sqlalchemy import func, distinct
+from sqlalchemy import case, func, distinct
 from app.extensions import db
 from app.models import Student, Company, Opportunity, Application, Department
 from app.utils.responses import success_response
@@ -48,13 +48,11 @@ def get_reports_summary():
     placed_students_count = app_query.filter(Application.status == 'Selected').with_entities(func.count(distinct(Student.student_id))).scalar() or 0
 
     # Company-wise breakdown
-    company_breakdown_raw = db.session.query(
+    company_breakdown_raw = app_query.with_entities(
         Company.name,
         func.count(Application.application_id).label('total_apps'),
-        func.count(func.nullif(Application.status != 'Selected', True)).label('selections')
-    ).join(Opportunity, Opportunity.company_id == Company.company_id)\
-     .join(Application, Application.opportunity_id == Opportunity.opportunity_id)\
-     .group_by(Company.name).all()
+        func.sum(case((Application.status == 'Selected', 1), else_=0)).label('selections')
+    ).group_by(Company.name).all()
 
     company_summary = [
         {'company_name': name, 'applications_count': apps, 'selected_count': sel}
@@ -62,12 +60,11 @@ def get_reports_summary():
     ]
 
     # Opportunity type breakdown
-    type_breakdown_raw = db.session.query(
+    type_breakdown_raw = app_query.with_entities(
         Opportunity.opportunity_type,
-        func.count(Application.application_id),
-        func.count(func.nullif(Application.status != 'Selected', True))
-    ).join(Application, Application.opportunity_id == Opportunity.opportunity_id)\
-     .group_by(Opportunity.opportunity_type).all()
+        func.count(Application.application_id).label('total_apps'),
+        func.sum(case((Application.status == 'Selected', 1), else_=0)).label('selections')
+    ).group_by(Opportunity.opportunity_type).all()
 
     type_summary = [
         {'type': t, 'applications': apps, 'selections': sel}
