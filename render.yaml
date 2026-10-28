@@ -1,4 +1,25 @@
 services:
+  - type: pserv
+    name: carrertrack-mysql-jahnavi
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: database/Dockerfile
+    dockerContext: database
+    disk:
+      name: careertrack-mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_DATABASE
+        value: careertrack_db
+      - key: MYSQL_USER
+        value: careertrack_user
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+
   - type: web
     name: carrertrack-api-jahnavi
     runtime: python
@@ -14,13 +35,19 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DB_HOST
-        sync: false
+        fromService:
+          type: pserv
+          name: carrertrack-mysql-jahnavi
+          property: host
       - key: DB_PORT
-        sync: false
+        value: "3306"
       - key: DB_USER
-        sync: false
+        value: careertrack_user
       - key: DB_PASSWORD
-        sync: false
+        fromService:
+          type: pserv
+          name: carrertrack-mysql-jahnavi
+          envVarKey: MYSQL_PASSWORD
       - key: DB_NAME
         value: careertrack_db
       - key: FRONTEND_URL

@@ -27,9 +27,11 @@ The MySQL schema contains 13 tables for users, students, recruiters, companies, 
 
 ## Hosted college demo
 
-`render.yaml` defines the React static site and Flask API. The API expects a reachable MySQL 8 database; the local MySQL server on your laptop is not reachable from Render. For a hosted demo, create a separate MySQL copy in Aiven, then import the existing `careertrack_db` dump into it. Keep `backend/.env` and database credentials out of GitHub. The Render Blueprint prompts for the hosted database connection fields and generates the Flask session secret.
+The root `render.yaml` deploys the React frontend, Flask API, and a private MySQL 8 service in one Render Blueprint. The database uses a persistent 10 GB disk and initializes a new hosted database from `database/02_schema.sql` and `database/03_seed_data.sql` on its first start. The local MySQL server is left untouched. If you have data entered only into your local database and not represented in the checked-in seed script, it must be exported and imported separately.
 
-After the hosted database is ready, open Render, choose **New → Blueprint**, connect `chittiboyanajahnavi-crypto/carrertrack`, and deploy the Blueprint from the repository root. It creates the API and frontend services on the free plans. Check the API's `/api/health` endpoint and sign in to the deployed frontend before presenting. Free hosting can sleep when idle, so open the app shortly before the demo.
+The MySQL service requires a paid Render compute plan and persistent storage; review the current pricing before deploying. Render generates the MySQL and Flask secrets and passes the database connection to the API over Render's private network. No database passwords belong in GitHub.
+
+To deploy, sign in to Render with the GitHub account that can access `chittiboyanajahnavi-crypto/carrertrack`, select **New → Blueprint**, choose the `main` branch and the repository root `render.yaml`, review the three services and the paid MySQL plan, then deploy. Wait for MySQL to finish its first initialization before checking the API at `/api/health` and opening the frontend. Free frontend/API services can sleep while idle; the MySQL service remains on its paid plan.
 
 ## Run locally on Windows
 
