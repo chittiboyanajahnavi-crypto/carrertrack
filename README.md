@@ -25,14 +25,15 @@ The MySQL schema contains 13 tables for users, students, recruiters, companies, 
 - Database: MySQL 8
 - Backend tests: pytest with an in-memory SQLite database
 
-## Hosted college demo
+## Free hosted college demo
 
-The root `render.yaml` deploys the React frontend, Flask API, and a private MySQL 8 service in one Render Blueprint. The database uses a persistent 10 GB disk and initializes a new hosted database from `database/02_schema.sql` and `database/03_seed_data.sql` on its first start. The local MySQL server is left untouched. If you have data entered only into your local database and not represented in the checked-in seed script, it must be exported and imported separately.
+Use Render for the React frontend and Flask API, with Aiven Free for MySQL. Render runs the frontend and API on free plans; Aiven Free currently provides a 1 GB MySQL service with no card required. Aiven may power a free database off after extended inactivity, and free Render web services sleep while idle, so allow time for both to wake before presenting.
 
-The MySQL service requires a paid Render compute plan and persistent storage; review the current pricing before deploying. Render generates the MySQL and Flask secrets and passes the database connection to the API over Render's private network. No database passwords belong in GitHub.
+The root `render.yaml` deploys the two Render services and prompts for the Aiven connection settings. Create an Aiven MySQL service, then create an empty database named `careertrack_db`. Download its project CA certificate. In MySQL Workbench, connect to Aiven using its host, port, user, password, and CA certificate with TLS verification enabled. Run `database/02_schema.sql`, then `database/03_seed_data.sql` against the new `careertrack_db`. Do not run `database/01_init_db_and_user.sql` on Aiven; it is for creating a local MySQL user.
 
-To deploy, sign in to Render with the GitHub account that can access `chittiboyanajahnavi-crypto/carrertrack`, select **New → Blueprint**, choose the `main` branch and the repository root `render.yaml`, review the three services and the paid MySQL plan, then deploy. Wait for MySQL to finish its first initialization before checking the API at `/api/health` and opening the frontend. Free frontend/API services can sleep while idle; the MySQL service remains on its paid plan.
+In Render, choose **New → Blueprint**, connect `chittiboyanajahnavi-crypto/carrertrack` on `main`, and deploy the root `render.yaml`. Enter the Aiven host, port, username, password, and CA certificate for `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_SSL_CA` when prompted. Render generates the Flask session secret. Keep all credentials in Render, not in GitHub. The backend uses the CA certificate to verify encrypted MySQL connections.
 
+This initializes Aiven from the repository's schema and demo seed scripts; it does not copy changes that exist only in your local database. Your local MySQL remains unchanged. After both services deploy, check the API at `/api/health` and open the frontend.
 ## Run locally on Windows
 
 You will need Python 3.11 or later, Node.js with npm, and MySQL 8.

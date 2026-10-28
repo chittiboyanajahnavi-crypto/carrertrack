@@ -1,4 +1,5 @@
 import os
+import ssl
 from datetime import timedelta
 from dotenv import load_dotenv
 
@@ -35,6 +36,13 @@ class Config:
         'pool_size': 10,
         'max_overflow': 20,
     }
+
+    # Set Aiven's CA certificate in DB_SSL_CA to verify TLS for hosted MySQL.
+    DB_SSL_CA = os.environ.get('DB_SSL_CA', '').strip()
+    if DB_SSL_CA:
+        SQLALCHEMY_ENGINE_OPTIONS['connect_args'] = {
+            'ssl': ssl.create_default_context(cadata=DB_SSL_CA)
+        }
 
     # Session & Cookie Security (HTTP-only)
     SESSION_COOKIE_NAME = os.environ.get('SESSION_COOKIE_NAME', 'careertrack_session')
