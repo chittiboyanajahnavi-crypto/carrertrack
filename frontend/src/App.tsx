@@ -608,7 +608,7 @@ export default function App() {
                 aria-current={activeTab === 'applicants' ? 'page' : undefined}
                 onClick={() => setActiveTab('applicants')}
               >
-                <AppIcon name="users" /> Candidate Pipeline ({companyApplications.length})
+                <AppIcon name="users" /> Applicants ({companyApplications.length})
               </button>
               <button
                 className={`tab-btn ${activeTab === 'opportunities' ? 'active' : ''}`}
@@ -982,7 +982,7 @@ export default function App() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff' }}>Candidate Application Pipeline</h2>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff' }}>Applicants</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                   Review student credentials, advance interview rounds, or finalize selection.
                 </p>
