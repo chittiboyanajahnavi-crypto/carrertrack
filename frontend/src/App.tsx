@@ -95,7 +95,7 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const [registration, setRegistration] = useState(() => ({ email: '', password: '', first_name: '', last_name: '', roll_number: '', department_id: '', graduation_year: String(new Date().getFullYear() + 4), cgpa: '', phone: '' }));
+  const [registration, setRegistration] = useState(() => ({ email: '', password: '', first_name: '', last_name: '', roll_number: '', department_id: '', graduation_year: '2026', cgpa: '', phone: '' }));
 
   const [applyModalOpp, setApplyModalOpp] = useState<Opportunity | null>(null);
   const [applyNotes, setApplyNotes] = useState('');

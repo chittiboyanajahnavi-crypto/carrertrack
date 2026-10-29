@@ -110,11 +110,15 @@ class EligibilityService:
         if already_applied:
             reasons.append(f"You have already applied for this opportunity (Status: {existing_app.status}).")
 
-        # 7. Skills Matching Breakdown (Informational)
+        # 7. Skills Matching Breakdown
         student_skill_ids = {ss.skill_id for ss in student.student_skills}
         required_skills = []
+        matched_count = 0
+        total_skills = len(opportunity.opportunity_skills)
         for os_req in opportunity.opportunity_skills:
             has_skill = os_req.skill_id in student_skill_ids
+            if has_skill:
+                matched_count += 1
             required_skills.append({
                 'skill_id': os_req.skill_id,
                 'skill_name': os_req.skill.name if os_req.skill else None,
@@ -122,11 +126,13 @@ class EligibilityService:
                 'matched': has_skill,
             })
         breakdown['skills'] = required_skills
+        match_percentage = round((matched_count / total_skills) * 100) if total_skills > 0 else 100
 
         return {
             'is_eligible': is_eligible,
             'can_apply': can_apply,
             'already_applied': already_applied,
+            'skills_match_score': match_percentage,
             'reasons': reasons,
             'existing_application': existing_app.to_dict() if existing_app else None,
             'criteria': breakdown,

@@ -101,6 +101,7 @@ def list_opportunities():
             opp_data['is_eligible'] = eval_result['is_eligible']
             opp_data['can_apply'] = eval_result['can_apply']
             opp_data['already_applied'] = eval_result['already_applied']
+            opp_data['skills_match_score'] = eval_result.get('skills_match_score', 0)
             opp_data['ineligibility_reasons'] = eval_result['reasons']
         results.append(opp_data)
 
