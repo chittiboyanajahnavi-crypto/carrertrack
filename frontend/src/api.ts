@@ -23,7 +23,6 @@ interface ApiResponse<T> {
 }
 
 function normalizeApplication(row: any): Application {
-  const isDemoStudent = (row.student_email ?? '').toLowerCase() === 'aarav.sharma@careertrack.edu';
   return {
     ...row,
     opportunity: row.opportunity ?? {
@@ -33,9 +32,9 @@ function normalizeApplication(row: any): Application {
       company_name: row.company_name,
     },
     student: row.student ?? (row.student_name ? {
-      full_name: isDemoStudent ? 'Jahnavi Chittiboyana' : row.student_name,
-      first_name: isDemoStudent ? 'Jahnavi' : row.student_name?.split(' ')[0],
-      last_name: isDemoStudent ? 'Chittiboyana' : row.student_name?.split(' ').slice(1).join(' '),
+      full_name: row.student_name,
+      first_name: row.student_name?.split(' ')[0],
+      last_name: row.student_name?.split(' ').slice(1).join(' '),
       roll_number: row.student_roll,
       email: row.student_email,
       cgpa: row.student_cgpa,
@@ -46,12 +45,11 @@ function normalizeApplication(row: any): Application {
 }
 
 function normalizeStudent<T extends StudentProfile>(student: T): T {
-  if (student.email?.toLowerCase() !== 'aarav.sharma@careertrack.edu') return student;
-  return { ...student, first_name: 'Jahnavi', last_name: 'Chittiboyana', full_name: 'Jahnavi Chittiboyana' };
+  return student;
 }
 
 function normalizeAuth(profile: AuthProfile): AuthProfile {
-  return profile.student ? { ...profile, student: normalizeStudent(profile.student) } : profile;
+  return profile;
 }
 
 function normalizeInterview(row: any): Interview {
