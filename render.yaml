@@ -30,7 +30,7 @@ services:
       - key: SESSION_COOKIE_SECURE
         value: "true"
       - key: SESSION_COOKIE_SAMESITE
-        value: Lax
+        value: None
 
   - type: web
     name: carrertrack-web-jahnavi

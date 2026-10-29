@@ -73,6 +73,10 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     SESSION_COOKIE_SECURE = True
+    # Cross-origin cookie required: frontend and backend are on different
+    # subdomains (*.onrender.com). SameSite=None + Secure=True lets the
+    # browser attach the session cookie on every cross-origin API request.
+    SESSION_COOKIE_SAMESITE = 'None'
 
 
 config_by_name = {
