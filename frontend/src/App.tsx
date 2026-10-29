@@ -7,6 +7,7 @@ import type {
   Interview,
   AdminMetrics,
   Department,
+  Skill,
   Company,
   StudentProfile,
   SystemStatus,
@@ -28,7 +29,7 @@ function localDateTimeInput(daysAhead = 0) {
 
 type IconName = 'student' | 'company' | 'shield' | 'dashboard' | 'briefcase' | 'file' | 'calendar' | 'users' | 'profile' | 'interview' | 'settings' | 'pin' | 'currency' | 'target' | 'clock' | 'link' | 'download' | 'mail' | 'globe' | 'warning' | 'check';
 const DEMO_EMAILS = {
-  student: 'aarav.sharma@careertrack.edu',
+  student: 'chittiboyanajahnavi@gmail.com',
   recruiter: 'priya.sharma@google.com',
   admin: 'admin@careertrack.edu',
 };
@@ -79,8 +80,13 @@ export default function App() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [studentsList, setStudentsList] = useState<StudentProfile[]>([]);
   const [studentDashboard, setStudentDashboard] = useState<StudentDashboard | null>(null);
+  const [profileFirstName, setProfileFirstName] = useState('');
+  const [profileLastName, setProfileLastName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
   const [profileResume, setProfileResume] = useState('');
+  const [allSkills, setAllSkills] = useState<Skill[]>([]);
+  const [selectedSkillId, setSelectedSkillId] = useState<string>('');
+  const [selectedProficiency, setSelectedProficiency] = useState<string>('Intermediate');
 
   // Filter states
   const [oppSearch, setOppSearch] = useState('');
@@ -131,11 +137,13 @@ export default function App() {
   const initApp = async () => {
     try {
       // Independent startup requests run together to reduce initial wait time.
-      const [status, deptData, user] = await Promise.all([
+      const [status, deptData, skillsData, user] = await Promise.all([
         api.getSystemStatus().catch(() => null),
         api.getDepartments().catch(() => []),
+        api.getSkills().catch(() => []),
         api.getCurrentUser().catch(() => null),
       ]);
+      setAllSkills(skillsData);
       setSystemStatus(status);
       if (!status) showNotification('Could not reach the backend status endpoint.', true);
       setDepartments(deptData);
@@ -178,6 +186,8 @@ export default function App() {
         setStudentDashboard(dashboard);
         const profile = dashboard.profile;
         if (profile) {
+          setProfileFirstName(profile.first_name ?? '');
+          setProfileLastName(profile.last_name ?? '');
           setProfilePhone(profile.phone ?? '');
           setProfileResume(profile.resume_url ?? '');
           setCurrentUser((current) => current ? { ...current, student: profile } : current);
@@ -1197,27 +1207,118 @@ export default function App() {
               </div>
 
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '0.75rem' }}>
-                Verified Skills & Competencies
+                Skills & Competencies
               </h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {(currentUser.student.skills ?? []).map((sk) => (
-                  <span key={sk.skill_id} className="badge badge-purple" style={{ fontSize: '0.85rem', padding: '0.4rem 0.75rem' }}>
-                    {sk.name} • {sk.proficiency || 'Intermediate'}
-                  </span>
-                ))}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                {(currentUser.student.skills ?? []).length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No skills added yet. Add your core competencies below.</p>
+                ) : (
+                  (currentUser.student.skills ?? []).map((sk) => (
+                    <span key={sk.skill_id} className="badge badge-purple" style={{ fontSize: '0.85rem', padding: '0.4rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      {sk.name} • {sk.proficiency || 'Intermediate'}
+                      <button
+                        type="button"
+                        title="Remove skill"
+                        style={{ background: 'none', border: 'none', color: '#ff7878', cursor: 'pointer', padding: 0, fontSize: '0.9rem', lineHeight: 1 }}
+                        onClick={async () => {
+                          try {
+                            await api.deleteSkill(sk.skill_id);
+                            const updated = await api.getMyProfile();
+                            setCurrentUser((current) => current ? { ...current, student: updated } : current);
+                            const opps = await api.getOpportunities();
+                            setOpportunities(opps);
+                            showNotification(`Removed skill: ${sk.name}`);
+                          } catch (err) {
+                            showNotification((err as Error).message, true);
+                          }
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))
+                )}
               </div>
+
+              {/* Add New Skill Section */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 8, border: '1px solid var(--border-subtle)', marginBottom: '1.5rem' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fff', marginBottom: '0.75rem' }}>Add Skill to Profile</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                  <select
+                    className="select-control"
+                    style={{ flex: '1 1 200px' }}
+                    value={selectedSkillId}
+                    onChange={(e) => setSelectedSkillId(e.target.value)}
+                  >
+                    <option value="">Select a skill...</option>
+                    {allSkills
+                      .filter((sk) => !(currentUser.student?.skills ?? []).some((s) => s.skill_id === sk.skill_id))
+                      .map((sk) => (
+                        <option key={sk.skill_id} value={sk.skill_id}>
+                          {sk.name} ({sk.category})
+                        </option>
+                      ))}
+                  </select>
+
+                  <select
+                    className="select-control"
+                    style={{ flex: '0 1 150px' }}
+                    value={selectedProficiency}
+                    onChange={(e) => setSelectedProficiency(e.target.value)}
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    disabled={!selectedSkillId}
+                    onClick={async () => {
+                      if (!selectedSkillId) return;
+                      try {
+                        await api.addSkill(Number(selectedSkillId), selectedProficiency);
+                        const updated = await api.getMyProfile();
+                        setCurrentUser((current) => current ? { ...current, student: updated } : current);
+                        setSelectedSkillId('');
+                        const opps = await api.getOpportunities();
+                        setOpportunities(opps);
+                        showNotification('Skill added successfully!');
+                      } catch (err) {
+                        showNotification((err as Error).message, true);
+                      }
+                    }}
+                  >
+                    + Add Skill
+                  </button>
+                </div>
+              </div>
+
+              {/* Edit Details: Name, Contact & Resume */}
               <form onSubmit={async (e) => {
                 e.preventDefault();
                 try {
-                  const profile = await api.updateMyProfile({ phone: profilePhone, resume_url: profileResume });
+                  const profile = await api.updateMyProfile({
+                    first_name: profileFirstName,
+                    last_name: profileLastName,
+                    phone: profilePhone,
+                    resume_url: profileResume,
+                  });
                   setCurrentUser((current) => current ? { ...current, student: profile } : current);
                   showNotification('Profile updated successfully.');
                 } catch (err) { showNotification((err as Error).message, true); }
               }} style={{ display: 'grid', gap: '1rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
-                <h3>Contact and resume</h3>
-                <label>Phone<input className="input-control" value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} placeholder="Phone number" /></label>
-                <label>Resume URL<input type="url" className="input-control" value={profileResume} onChange={(e) => setProfileResume(e.target.value)} placeholder="https://..." /></label>
-                <button className="btn btn-primary" type="submit" style={{ justifySelf: 'start' }}>Save profile</button>
+                <h3>Edit Profile Details</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <label>First Name<input className="input-control" value={profileFirstName} onChange={(e) => setProfileFirstName(e.target.value)} placeholder="First Name" required /></label>
+                  <label>Last Name<input className="input-control" value={profileLastName} onChange={(e) => setProfileLastName(e.target.value)} placeholder="Last Name" required /></label>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <label>Phone<input className="input-control" value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} placeholder="Phone number" required /></label>
+                  <label>Resume URL<input type="url" className="input-control" value={profileResume} onChange={(e) => setProfileResume(e.target.value)} placeholder="https://..." /></label>
+                </div>
+                <button className="btn btn-primary" type="submit" style={{ justifySelf: 'start' }}>Save Profile Changes</button>
               </form>
             </div>
           </div>

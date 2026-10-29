@@ -104,7 +104,13 @@ def update_profile():
 
     data = request.get_json() or {}
 
-    # Permitted contact updates
+    # Permitted student profile updates
+    if 'first_name' in data and str(data['first_name']).strip():
+        student.first_name = str(data['first_name']).strip()
+
+    if 'last_name' in data and str(data['last_name']).strip():
+        student.last_name = str(data['last_name']).strip()
+
     if 'phone' in data:
         phone_val = str(data['phone']).strip()
         if phone_val:

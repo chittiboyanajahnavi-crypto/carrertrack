@@ -254,8 +254,21 @@ export const api = {
     return normalizeStudent(await request<StudentProfile>('/students/profile'));
   },
 
-  async updateMyProfile(data: { phone?: string; resume_url?: string }): Promise<StudentProfile> {
+  async updateMyProfile(data: { first_name?: string; last_name?: string; phone?: string; resume_url?: string }): Promise<StudentProfile> {
     return normalizeStudent(await request<StudentProfile>('/students/profile', { method: 'PUT', body: JSON.stringify(data) }));
+  },
+
+  async addSkill(skill_id: number, proficiency: string = 'Intermediate'): Promise<any> {
+    return request('/students/skills', {
+      method: 'POST',
+      body: JSON.stringify({ skill_id, proficiency }),
+    });
+  },
+
+  async deleteSkill(skill_id: number): Promise<any> {
+    return request("/students/skills/" + skill_id, {
+      method: 'DELETE',
+    });
   },
 
   // Taxonomies
